@@ -1,0 +1,716 @@
+#include <iostream>
+using namespace std;
+
+template<class T>
+class myvector
+{
+public:
+  typedef T* myiterator;
+  typedef const T* const_myiterator;
+  typedef bool (*FUN)(int a,int b);
+  class reverse_myiterator
+  {
+  public:
+    friend class myvector<T>;
+    reverse_myiterator()
+    {
+      p=NULL;
+    }
+    reverse_myiterator operator ++ (int i)
+    {
+      reverse_myiterator it;
+      it=*this;
+      (this->p)--;
+      return it;
+    }
+    T operator *()
+    {
+      return *(this->p);
+    }
+    bool operator !=(reverse_myiterator v)
+    {
+      return this->p!=(--v.p);
+    }
+  private:
+    T * p;
+  };
+
+  void mycapacity(int _num=1)
+  {
+    size=_num;
+    capacity=3*size;
+  }
+
+  //构造
+  myvector()
+  {
+     ptr=NULL;
+  }
+  myvector(int num,T val)
+  {
+    mycapacity(num);
+    ptr=new T [capacity];
+    int i;
+    for(i=0;i<size;i++)
+    {
+      ptr[i]=val;
+    }
+  }
+  myvector(T val)
+  {
+    mycapacity();
+    ptr=new T [capacity];
+    ptr[0]=val;
+  }
+
+  myvector(myvector &v)
+  {
+    this->size=v.size;
+    this->capacity=v.capacity;
+    ptr=new T [capacity];
+    int i;
+    for(i=0;i<size;i++)
+    {
+      this->ptr[i]=v.ptr[i];
+    }
+  }
+
+  myvector(myiterator start,myiterator end)
+  {
+    int num=(int)(end-start);
+    cout<<num<<endl;
+    myiterator tmp;
+    tmp=start;
+    mycapacity(num);
+    ptr=new T [capacity];
+    int i;
+    for(i=0;i<size;i++)
+    {
+      ptr[i]=tmp[i];
+    }
+  }
+
+  // ==
+  bool operator ==(myvector v)
+  {
+    if(size==v.size && capacity==v.capacity)
+    {
+      while(ptr!=myrend())
+      {
+        if(*ptr==*(v.ptr))
+        {
+          ptr++;
+          (v.ptr)++;
+        }
+        else
+          return false;
+      }
+      return true;
+    }
+    else
+      return false;
+  }
+
+  // !=
+  bool operator !=(myvector v)
+  {
+    if(size==v.size && capacity==v.capacity)
+    {
+      while(ptr!=myrend())
+      {
+        if(*ptr==*(v.ptr))
+        {
+          ptr++;
+          (v.ptr)++;
+        }
+        else
+          return true;
+      }
+      return false;
+    }
+    else
+      return true;
+  }
+
+  // <=
+  bool operator <=(myvector v)
+  {
+    myiterator tmp=ptr;
+    myiterator vtmp=v.ptr;
+    while(*tmp<=*vtmp)
+    {
+      tmp++;
+      vtmp++;
+      if(tmp==myend() && vtmp==v.myend())
+        return true;
+      if(tmp==myend())
+        return true;
+    }
+    return false;
+  }
+
+  // <
+  bool operator <(myvector v)
+  {
+    myiterator tmp=ptr;
+    myiterator vtmp=v.ptr;
+    while(*tmp<*vtmp)
+    {
+      tmp++;
+      vtmp++;
+      if(tmp==myend())
+        return true;
+    }
+    return false;
+  }
+
+  // >=
+  bool operator >=(myvector v)
+  {
+    myiterator tmp=ptr;
+    myiterator vtmp=v.ptr;
+    while(*tmp>=*vtmp)
+    {
+      tmp++;
+      vtmp++;
+      if(tmp==myend() && vtmp==v.myend())
+        return true;
+      if(vtmp==v.myend())
+        return true;
+      if(tmp==myend())
+        return false;
+    }
+    return false;
+  }
+
+  // >
+  bool operator >(myvector v)
+  {
+    myiterator tmp=ptr;
+    myiterator vtmp=v.ptr;
+    while(*tmp>=*vtmp)
+    {
+      tmp++;
+      vtmp++;
+      if(tmp==myend())
+        return false;
+      if(vtmp==v.myend())
+        return true;
+    }
+    return false;
+  }
+
+  // []
+  T operator [](int i)
+  {
+    return *(ptr+i);
+  }
+
+   //将区间[start, end)的元素赋到当前vector,清除掉为vector赋值以前的内容.
+   void myassign(myiterator start,myiterator end)
+   {
+     myclear();
+     int num=(int)(end-start);
+     mycapacity(num);
+     ptr=new T [capacity];
+     int i;
+     for(i=0;i<size;i++)
+     {
+       ptr[i]=*start;
+       start++;
+     }
+   }
+
+  //赋num个值为val的元素到vector中,清除掉为vector赋值以前的内容.
+  void myassign(int num,T val)
+  {
+    myclear();
+    mycapacity(num);
+    ptr=new T [capacity];
+    int i;
+    for(i=0;i<size;i++)
+    {
+      ptr[i]=val;
+    }
+  }
+
+  //在Vector最后添加一个元素
+  void mypush_back(T val)
+  {
+    if(ptr==NULL)
+    {
+      mycapacity();
+      ptr=new T [capacity];
+      ptr[0]=val;
+    }
+    else
+    {
+      if(size-capacity>=0)
+      {
+        size++;
+        capacity=3*size;
+        T *tmp=ptr;
+        ptr=new T [capacity];
+        int i;
+        for(i=0;i<size;i++)
+        {
+          if(i==size-1)
+            ptr[i]=val;
+          else
+            ptr[i]=tmp[i];
+        }
+        delete[] tmp;
+        tmp=NULL;
+      }
+      else
+      {
+        *myend()=val;
+        size++;
+      }
+    }
+  }
+
+  //返回第一个元素的迭代器
+  myiterator mybegin()
+  {
+    return ptr;
+  }
+
+  //返回最末元素的迭代器(译注:实指向最末元素的下一个位置)
+  myiterator myend()
+  {
+    return (ptr+size);
+  }
+
+  //返回当前Vector指定位置loc的元素的引用
+  T myat(int i)                       
+  {
+    myiterator tmp;
+    myiterator end;
+    tmp=mybegin();
+    end=myend();
+    if(i<size && i>=0)
+      return *(tmp+i);
+    else
+      throw exception();
+
+  }
+  class exception
+  {
+
+  };
+
+  //返回当前vector起始元素的引用
+  T myfront()
+  {
+    if(ptr!=NULL)
+      return *ptr;
+  }
+
+  //返回当前vector最末一个元素的引用
+  T myback()
+  {
+    myiterator tmp;
+    tmp=myend();
+    tmp--;
+    return *tmp;
+  }
+
+  //删除当前vector中的所有元素
+  void myclear()
+  {
+    size=0;
+  }
+
+  //判断Vector是否为空（返回true时为空）
+  bool myempty()
+  {
+    if(size==0)
+      return true;
+    else
+      return false;
+  }
+
+  //查找
+  myiterator myfind(myiterator start,myiterator end,T value)
+  {
+    while(start!=end)
+    {
+      if((*start)==value)
+        return start;
+      else
+        start++;
+    }
+    return end;
+  }
+
+  //删除当前vector最末的一个元素
+  void mypop_back()
+  {
+    size--;
+  }
+
+  //删作指定位置loc的元素
+  myiterator myerase(myiterator loc)
+  {
+    myiterator tmp=loc;
+    myiterator end=myend();
+    while((int)(loc-end)!=1)
+    {
+      *loc=*(loc+1);
+      loc++;
+    }
+    size--;
+    return tmp;
+  }
+
+  //删除区间[start, end)的所有元素
+  myiterator myerase(myiterator start,myiterator end)
+  {
+    int e=(int)(end-start);
+    myiterator tmp=start;
+    myiterator curr=myend();
+    if(start==ptr && end==curr)
+      myclear();
+    if(start!=ptr && end==curr)
+      size=size-e;
+    if(end!=curr)
+    {
+      while(end!=curr)
+      {
+        *start=*end;
+        start++;
+        end++;
+      }
+      size=size-e;
+    }
+    return tmp;
+  }
+
+  //在指定位置loc前插入值为val的元素,返回指向这个元素的迭代器
+  myiterator myinsert(myiterator loc,T val)
+  {
+    myiterator tmp=myend()-1;
+    myiterator end=myend();
+    while(end!=loc)
+    {
+      *end=*tmp;
+      end--;
+      tmp--;
+    }
+    *end=val;
+    size++;
+    return end;
+  }
+
+  //在指定位置loc前插入num个值为val的元素
+  void myinsert(myiterator loc, int num,T val)
+  {
+    if(num+size>capacity)
+    {
+      T *tmp;
+      T *newnode;
+      mycapacity(num+size);
+      int n=(int)(loc-ptr);
+      newnode=new T [capacity];
+      int i;
+      for(i=0;i<size;i++)
+      {
+        if(i<n)
+        {
+          newnode[i]=ptr[i];
+        }
+        if(i<(n+num) && i>=n)
+        {
+          newnode[i]=val;
+        }
+        if(i>=(n+num))
+        {
+          newnode[i]=ptr[i-num];
+        }
+      }
+      tmp=ptr;
+      ptr=newnode;
+      newnode=NULL;
+      delete tmp;
+      tmp=NULL;
+    }
+    else
+    {
+      loc--;
+      T *tmp=myend()-1;
+      while(tmp!=loc)
+      {
+        *(tmp+num)=*tmp;
+        tmp--;
+      }
+      loc++;
+      int i;
+      for(i=0;i<num;i++)
+      {
+        *loc=val;
+        loc++;
+      }
+      size=size+num;
+    }
+  }
+
+  //在指定位置loc前插入区间[start, end)的所有元素
+  void myinsert(myiterator loc,myiterator start,myiterator end)
+  {
+    int num=(int)(end-start);
+    if(num+size>capacity)
+    {
+      T *tmp;
+      T *newnode;
+      mycapacity(num+size);
+      int n=(int)(loc-ptr);
+      newnode=new T [capacity];
+      int i;
+      for(i=0;i<size;i++)
+      {
+        if(i<n)
+        {
+          newnode[i]=ptr[i];
+        }
+        if(i<(n+num) && i>=n)
+        {
+          newnode[i]=start[i-n];
+        }
+        if(i>=(n+num))
+        {
+          newnode[i]=ptr[i-num];
+        }
+      }
+      tmp=ptr;
+      ptr=newnode;
+      newnode=NULL;
+      delete tmp;
+      tmp=NULL;
+    }
+    else
+    {
+      loc--;
+      T *tmp=myend()-1;
+      while(tmp!=loc)
+      {
+        *(tmp+num)=*tmp;
+        tmp--;
+      }
+      loc++;
+      int i;
+      for(i=0;i<num;i++)
+      {
+        *loc=*start;
+        loc++;
+        start++;
+      }
+      size=size+num;
+    }
+  }
+
+  //返回指向当前vector末尾的逆迭代器,实际指向末尾的下一位置,而其内容为末尾元素的值
+  reverse_myiterator myrbegin()
+  {
+    reverse_myiterator it;
+    it.p=myend();
+    (it.p)--;
+    return it;
+  }
+
+  //返回指向当前vector起始位置的逆迭代器
+  reverse_myiterator myrend()
+  {
+    reverse_myiterator it;
+    it.p=ptr;
+    return it;
+  }
+
+  //交换当前vector与vector from的元素
+  void myswap(myvector &v)
+  {
+    myiterator it;
+    int tmp;
+    it=ptr;
+    tmp=size;
+    this->ptr=v.ptr;
+    mycapacity(v.size);
+    v.ptr=it;
+    v.mycapacity(tmp);
+  }
+
+  //排序默认为升序
+  void mysort()
+  {
+    int i,j;
+    for(i=0;i<size;i++)
+    {
+      for(j=0;j<size-i-1;j++)
+      {
+        if(ptr[j]>ptr[j+1])
+        {
+          T tmp;
+          tmp=ptr[j];
+          ptr[j]=ptr[j+1];
+          ptr[j+1]=tmp;
+        }
+      }
+    }
+  }
+
+  //自定义排序
+  void mysort(FUN fun)
+  {
+    if(fun(3,5))
+    {
+      int i,j;
+      for(i=0;i<size;i++)
+      {
+        for(j=0;j<size-i-1;j++)
+        {
+          if(ptr[j]>ptr[j+1])
+          {
+            T tmp;
+            tmp=ptr[j];
+            ptr[j]=ptr[j+1];
+            ptr[j+1]=tmp;
+          }
+        }
+      }
+    }
+    else
+    {
+      int i,j;
+      for(i=0;i<size;i++)
+      {
+        for(j=0;j<size-i-1;j++)
+        {
+          if(ptr[j]<ptr[j+1])
+          {
+            T tmp;
+            tmp=ptr[j];
+            ptr[j]=ptr[j+1];
+            ptr[j+1]=tmp;
+          }
+        }
+      }
+    }
+  }
+
+private:
+  T * ptr;
+  int size;
+  int capacity;
+};
+
+
+
+bool fun(int a,int b)
+{
+  return a<b;
+}
+
+void myout(myvector<int> l)
+{
+  myvector<int>::myiterator it;
+  for(it=l.mybegin();it!=l.myend();it++)
+  {
+    cout<<*it<<'\t';
+  }
+  cout<<endl;
+}
+
+void myrout(myvector<int> v)
+{
+  myvector<int>::reverse_myiterator it;
+  for(it=v.myrbegin();it!=v.myrend();it++)
+  {
+    cout<<*it<<'\t';
+  }
+  cout<<endl;
+}
+
+void contout(myvector<int> v)
+{
+  myvector<int>::const_myiterator it;
+  for(it=v.mybegin();it!=v.myend();it++)
+  {
+    cout<<*it<<'\t';
+  }
+  cout<<endl;
+}
+
+int main(int argc, char const *argv[])
+{
+    myvector<int> v;
+    myvector<int> v1;
+    v.mypush_back(30);
+    v.mypush_back(3);
+    v.mypush_back(301);
+    v1.mypush_back(302);
+    v1.mypush_back(303);
+    v1.mypush_back(304);
+    v1.mypush_back(305);
+    v1.mypush_back(305);
+    v1.mypush_back(30);
+    v1.mypush_back(3);
+    v1.mypush_back(301);
+    v1.mypush_back(302);
+    v1.mypush_back(303);
+    v1.mypush_back(304);
+    v1.mypush_back(305);
+    v1.mypush_back(305);
+    //myvector<int> v1(v.mybegin(),v.myend()-4);
+    // try
+    // {
+    //   cout<<v.myat(30)<<endl;
+    // }
+    // catch(exception)
+    // {
+    //
+    // }
+    // cout<<v.myfront()<<endl;
+    // cout<<v.myback()<<endl;
+    //myout(v);
+    //cout<<*(v.myend())<<endl;
+    //myout(v1);
+    // v.myclear();
+    // cout<<v.myempty()<<endl;
+    // v.mypush_back(30);
+    // v.mypush_back(3);
+    // v.mypush_back(301);
+    // cout<<v.myempty()<<endl;
+    //myout(v);
+    myout(v1);
+    myrout(v1);
+    // myout(v1);
+    //myvector<int>::myiterator it=v.myfind(v.mybegin(),v.myend(),3);
+    //myvector<int>::myiterator it1=v1.myfind(v1.mybegin(),v1.myend(),301);
+    // if(it==v.myend())
+    // {
+    //   cout<<"not"<<endl;
+    // }
+    // cout<<*it<<endl;
+    // int i;
+    // for(i=0;i<13;i++)
+    // {
+    //   v1.mypop_back();
+    //   myout(v1);
+    // }
+    //v.myerase(v.mybegin()+2,v.myend());
+    //v.myinsert(it,v1.mybegin(),v1.myend());
+    //v.myswap(v1);
+    //mypop_back()
+    // if(v1>v)
+    // {
+    //   cout<<"yes"<<endl;
+    // }
+    // else
+    //   cout<<"no"<<endl;
+    //cout<<v[2]<<endl;
+    //v1.myassign(5,10);
+    //v1.mysort(fun);
+    //myout(v);
+    //myout(v1);
+    return 0;
+}
